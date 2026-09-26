@@ -1,2 +1,2 @@
 # Guard
-The Official Guar repository!
+The Official Guard repository!
