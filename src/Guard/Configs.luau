@@ -11,58 +11,62 @@ Configs.Defaults = {
 
 Configs.Settings = {
 	Debug = true,             
-	LogViolations = true,    
+	LogViolations = true,   
+	Cracked = false, -- removes all barriers, BE CAREFUL OF HACKERS, THIS IS FOR TESTING PURPOSES ONLY! 
 }
 
 -- ADD EVENTS HERE
 Configs.Events = {
 	Test = {
-		Args = { "string", "number" }, 
+		Args = { "string", "number", "number" }, 
+		MaxNumberValue = 500,
+		MaxStringLength = 100,
+		MinNumberValue = 0,
 		MaxCallsPerSecond = 5,
 	},
 }
 
 local function populateConfig(config: { [any]: any }, default: { [any]: any })
-    for key, value in pairs(default) do
-        if type(value) == "table" then
-            config[key] = config[key] or {}
-            populateConfig(config[key], value)
-        else
-            if config[key] == nil then
-	            config[key] = value
-            end
-        end
-    end
+	for key, value in pairs(default) do
+		if type(value) == "table" then
+			config[key] = config[key] or {}
+			populateConfig(config[key], value)
+		else
+			if config[key] == nil then
+				config[key] = value
+			end
+		end
+	end
 
-    return config
+	return config
 end
 
 function Configs.Init(old_configs)
-    if old_configs then
-        for key, value in pairs(old_configs) do
-            if Configs[key] then
-                Configs[key] = value or Configs[key]
-            end
+	if old_configs then
+		for key, value in pairs(old_configs) do
+			if Configs[key] then
+				Configs[key] = value or Configs[key]
+			end
 
-        end
-    end
+		end
+	end
 
-    for event_name, event_config in pairs(Configs.Events) do
-        Configs.Events[event_name] = populateConfig(event_config, Configs.Defaults)
-    end
+	for event_name, event_config in pairs(Configs.Events) do
+		Configs.Events[event_name] = populateConfig(event_config, Configs.Defaults)
+	end
 
-    print("Configs Successfully initialised!")
-    return true
+	print("Configs Successfully initialised!")
+	return true
 end
 
 
 
 function Configs.LoadConfig(name: string)
-    if not Configs.Events[name] then
-        error("Config " .. name .. " does not exist!")
-    end
-    
-    return Configs.Events[name]
+	if not Configs.Events[name] then
+		error("Config " .. name .. " does not exist!")
+	end
+	
+	return Configs.Events[name]
 end
 
 return Configs

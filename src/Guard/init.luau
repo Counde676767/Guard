@@ -1,3 +1,5 @@
+local RunService = game:GetService("RunService")
+
 local Configs = require(script.Configs)
 local Checks = require(script.Checks)
 
@@ -11,37 +13,6 @@ local handlers = {}
 
 local rates = {}
 
-local received, handled = 0, 0
-
-local stats = {} -- stats[event_name] = { calls = 0, time = 0 }
-
-
-
- -- in the listener: received += 1 at the top, handled += 1 right before the handler runs
-
-task.spawn(function()
-	while true do
-	    task.wait(1)
-		print(`received {received}, handled {handled}`)
-		received, handled = 0, 0
-        for name, s in stats do
-	        print(`{name}: {s.calls} calls, avg {math.round(s.time / s.calls * 1e6 * 100) / 100} µs`)
-        end
-        table.clear(stats)
-	end
-end)
-
-
-local function record(event_name, start)
-	local key = if typeof(event_name) == "string" then event_name else "<invalid>"
-	local s = stats[key]
-	if not s then
-		s = { calls = 0, time = 0 }
-		stats[key] = s
-	end
-	s.calls += 1
-	s.time += os.clock() - start
-end
 
 local Guard = {}
 
@@ -62,22 +33,33 @@ function Guard.Init(old_configs)
 		remote.Name = "GuardRemote"
 		remote.Parent = game:GetService("ReplicatedStorage")
 
+		local settings = Configs.Settings
+
+		local isCracked = settings.Cracked
+
+		if isCracked then
+			if RunService:IsStudio() then
+				warn("Cracked mode is enabled! All checks will be bypassed. This is for testing purposes only!")
+			else
+				isCracked = false
+				warn("Cracked mode disabled in live environment!")
+			end
+		end
+
 		remote.OnServerEvent:Connect(function(player, event_name, ...)
 			local start = os.clock()
-			received += 1
 
 			if typeof(event_name) ~= "string" then
-				record(event_name, start)
 				return
 			end
 
 			local handler = handlers[event_name]
 			if not handler then
-				record(event_name, start)
 				return
 			end
 
 			local cfig = Configs.Events[event_name]
+			
 
 			local playerRates = rates[player.UserId]
 			if not playerRates then
@@ -96,13 +78,64 @@ function Guard.Init(old_configs)
 			bucket.last = start
 
 			if bucket.tokens < 1 then
-				record(event_name, start)
 				return
 			end
 			bucket.tokens -= 1
 
-			handled += 1
-			record(event_name, start)
+			local argsTable = { ... }
+
+			if cfig.Args then
+				if isCracked then
+					if settings.Debug then
+						warn("Guard: Cracked mode is enabled! Skipping argument checks for event '" .. event_name .. "'. This is for testing purposes only!")
+						
+					else
+						if #argsTable ~= #cfig.Args then
+							warn("Guard: Argument count mismatch for event '" .. event_name .. "'. Expected " .. #cfig.Args .. ", got " .. #argsTable .. ". Dropping event call.")
+							return
+						end
+						for i, argType in ipairs(cfig.Args) do
+							local arg = argsTable[i]
+							local currentArgType = typeof(arg)
+							if currentArgType ~= argType then
+								warn("Guard: Argument type mismatch for event '" .. event_name .. "'. Expected " .. argType .. ", got " .. currentArgType .. " Dropping event call.")
+								return
+							end
+
+
+							if argType =="number" and cfig.MaxNumberValue and arg > cfig.MaxNumberValue then
+								warn("Guard: Argument value exceeds maximum for event '" .. event_name .. "'. Expected <= " .. cfig.MaxNumberValue .. ", got " .. arg .. ". Dropping event call.")
+								return
+							elseif argType == "number" and cfig.MinNumberValue and arg < cfig.MinNumberValue then
+								warn("Guard: Argument value below minimum for event '" .. event_name .. "'. Expected >= " .. cfig.MinNumberValue .. ", got " .. arg .. ". Dropping event call.")
+								return
+							end
+
+							if argType == "number" and cfig.RejectBadNumbers and (arg == math.huge or arg == -math.huge or arg ~= arg) then
+								warn("Guard: Argument is an invalid number for event '" .. event_name .. "'. Dropping event call.")
+								return
+							end
+
+							if argType == "string" and cfig.MaxStringLength and #arg > cfig.MaxStringLength then
+								warn("Guard: Argument string length exceeds maximum for event '" .. event_name .. "'. Expected <= " .. cfig.MaxStringLength .. ", got " .. #arg .. ". Dropping event call.")
+								return
+							end
+						end
+					end
+				end
+	
+				
+			else
+				if settings.Debug then
+					warn("Guard: No argument types defined for event '" .. event_name .. "'. Skipping argument checks. However, this is not recommended for security reasons.")
+				end
+
+				
+			end
+
+
+			
+
 			handler(player, ...)
 		end)
 	else
