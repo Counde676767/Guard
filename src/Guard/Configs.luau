@@ -6,6 +6,7 @@ Configs.Defaults = {
 	MaxStringLength = 200,
 	AllowedTypes = { string = true, number = true, boolean = true, Instance = true },
 	RejectBadNumbers = true, 
+	IsUnreliable = false,
 }
 
 
@@ -23,6 +24,7 @@ Configs.Events = {
 		MaxStringLength = 100,
 		MinNumberValue = 0,
 		MaxCallsPerSecond = 5,
+		IsUnreliable = true,
 	},
 }
 
