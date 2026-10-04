@@ -7,6 +7,7 @@ Configs.Defaults = {
 	AllowedTypes = { string = true, number = true, boolean = true, Instance = true },
 	RejectBadNumbers = true, 
 	IsUnreliable = false,
+	Checks = {}
 }
 
 
@@ -20,11 +21,15 @@ Configs.Settings = {
 Configs.Events = {
 	Test = {
 		Args = { "string", "number", "number" }, 
+		ArgNames = { "text", "x", "y" },
 		MaxNumberValue = 500,
 		MaxStringLength = 100,
 		MinNumberValue = 0,
 		MaxCallsPerSecond = 5,
 		IsUnreliable = true,
+		Checks = {
+			{ Name = "TestCheck", Args = {"hello"} }
+		}
 	},
 }
 

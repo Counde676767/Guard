@@ -3,5 +3,5 @@ local Guard = require(ReplicatedStorage.Guard)
 
 Guard.Init()
 
-Guard.Fire("Test", "hello", -67, 123)
+Guard.Fire("Test", "hello", 3, 123)
 	

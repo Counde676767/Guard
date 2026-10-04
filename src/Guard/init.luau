@@ -112,6 +112,33 @@ local function allowCall(player, event_name, cfig, now)
 	return true
 end
 
+local function doChecks(player, cfig, event_name, args)
+	local checks = cfig.Checks
+	if not checks or #checks == 0 then
+		return true
+	end
+
+	local named = {}
+	for i, name in cfig.ArgNames do
+		named[name] = args[i]
+	end
+
+	for _, check in checks do
+		local fn = Checks.CheckLists[check.Name]
+		local ok, passed, reason = pcall(fn, player, named, table.unpack(check.Args or {}))
+		if not ok then
+			debugWarn(`'{event_name}' check '{check.Name}' errored: {passed}. Dropped.`)
+			return false
+		end
+		if not passed then
+			debugWarn(`'{event_name}' check '{check.Name}' failed: {reason or "no reason"}. Dropped.`)
+			return false
+		end
+	end
+
+	return true
+end
+
 function Guard.Init(old_configs)
 	if initialised then
 		warn("[Guard] Guard has already been initialised!")
@@ -165,6 +192,10 @@ function Guard.Init(old_configs)
 					return
 				end
 				if not checkArgs(cfig, event_name, table.pack(...)) then
+					return
+				end
+
+				if not doChecks(player, cfig, event_name, table.pack(...)) then
 					return
 				end
 			end
