@@ -1,4 +1,4 @@
-# Guard
+
 # Guard
 
 **The network layer for Roblox.** Guard runs all your remote traffic through one RemoteEvent (plus one UnreliableRemoteEvent) and checks every call before it reaches your code: rate limits, argument validation, and reusable checks. You write the config and the handlers. Guard handles everything in between.
