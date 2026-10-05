@@ -100,9 +100,6 @@ Sends an event to the server.
 ### `Guard.FireClient(player, eventName, ...)` · server only
 Sends an event to one client.
 
-### `Guard.FireAllClients(eventName, ...)` · server only
-Sends an event to every client.
-
 ### `Guard.AddCheck(name, fn)` · server only
 Registers a custom check. Call it **before** `Guard.On` for any event that uses it, since `Guard.On` verifies that every listed check exists.
 
