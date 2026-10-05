@@ -215,10 +215,10 @@ Keeping your config outside Guard's folder is planned for v0.2, so future update
 Made by **Counde**.
 
 - Discord: `@counde`
-- Website: [YOUR SITE LINK]
+- Website: Coming soon 
 
-Guard is free and open source. If it helps your game, you can support development at [DONATION PLACE LINK].
+Guard is free and open source. If it helps your game, you can support development by donating, coming soon as well.
 
 ## License
 
-[LICENSE]
+Counde.
