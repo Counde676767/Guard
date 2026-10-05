@@ -1,5 +1,6 @@
 local Configs = {}
 
+
 Configs.Defaults = {
 	MaxCallsPerSecond = 20, 
 	MaxArgs = 8,

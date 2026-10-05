@@ -12,9 +12,12 @@ local initialised = false
 local isServer = RunService:IsServer()
 
 local handlers = {}
+local clientHandlers = {}
 local rates = {}
 
 local Guard = {}
+
+Guard.VERSION = "0.1.0"
 
 local function debugWarn(...)
 	if Configs.Settings.Debug then
@@ -225,6 +228,14 @@ function Guard.Init(old_configs)
 	end
 end
 
+function Guard.AddCheck(name: string, fn: (player: Player, data: { [string]: any }, settings: { [string]: any }) -> (boolean, string?))
+	local checkList = Checks.CheckLists
+	if checkList[name] then
+		error(`[Guard] Check '{name}' already exists`)
+	end
+	checkList[name] = fn
+end
+
 function Guard.Fire(event_name: string, ...: any)
 	if not initialised then
 		error("[Guard] Call Guard.Init() before Guard.Fire()")
@@ -249,22 +260,67 @@ function Guard.On(event_name: string, action: (...any) -> ())
 	if not initialised then
 		error("[Guard] Call Guard.Init() before Guard.On()")
 	end
-	if not isServer then
-		error("[Guard] Guard.On() is server-only for now.")
+	if type(action) ~= "function" then
+		error(`[Guard] Guard.On('{event_name}') expected a function`)
 	end
 
 	local cfig = Configs.Events[event_name]
 	if not cfig then
 		error(`[Guard] Event '{event_name}' is not in Configs.Events`)
 	end
+
+	if not isServer then
+		if clientHandlers[event_name] then
+			error(`[Guard] Event '{event_name}' already has a client handler`)
+		end
+		clientHandlers[event_name] = action
+		return
+	end
+
 	if handlers[event_name] then
 		error(`[Guard] Event '{event_name}' already has a handler`)
 	end
+
 	if not cfig.Args then
 		debugWarn(`'{event_name}' has no Args defined. Only basic type checks will run.`)
 	end
 
+	if cfig.Checks then
+		if not cfig.ArgNames or #cfig.ArgNames ~= #(cfig.Args or {}) then
+			error(`[Guard] '{event_name}': ArgNames must name every arg when Checks are used`)
+		end
+		for _, check in cfig.Checks do
+			if type(Checks.CheckLists[check.Name]) ~= "function" then
+				error(`[Guard] '{event_name}': check '{check.Name}' does not exist`)
+			end
+		end
+	end
+
 	handlers[event_name] = action
+end
+
+function Guard.FireClient(player: Player, event_name: string, ...: any)
+	if not initialised then
+		error("[Guard] Call Guard.Init() before Guard.FireClient()")
+	end
+	if not isServer then
+		error("[Guard] Guard.FireClient() is server-only.")
+	end
+
+	local cfig = Configs.Events[event_name]
+	if not cfig then
+		error(`[Guard] Event '{event_name}' is not in Configs.Events`)
+	end
+
+	if typeof(player) ~= "Instance" or not player:IsA("Player") then
+		error(`[Guard] FireClient expected a Player, got {typeof(player)}`)
+	end
+
+	if cfig.IsUnreliable then
+		unreliableRemote:FireClient(player, event_name, ...)
+	else
+		remote:FireClient(player, event_name, ...)
+	end
 end
 
 return Guard
