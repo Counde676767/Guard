@@ -1,4 +1,4 @@
-# Guard
+
 # Guard
 
 **The network layer for Roblox.** Guard runs all your remote traffic through one RemoteEvent (plus one UnreliableRemoteEvent) and checks every call before it reaches your code: rate limits, argument validation, and reusable checks. You write the config and the handlers. Guard handles everything in between.
@@ -99,9 +99,6 @@ Sends an event to the server.
 
 ### `Guard.FireClient(player, eventName, ...)` · server only
 Sends an event to one client.
-
-### `Guard.FireAllClients(eventName, ...)` · server only
-Sends an event to every client.
 
 ### `Guard.AddCheck(name, fn)` · server only
 Registers a custom check. Call it **before** `Guard.On` for any event that uses it, since `Guard.On` verifies that every listed check exists.
@@ -215,10 +212,10 @@ Keeping your config outside Guard's folder is planned for v0.2, so future update
 Made by **Counde**.
 
 - Discord: `@counde`
-- Website: [YOUR SITE LINK]
+- Website: Coming soon 
 
-Guard is free and open source. If it helps your game, you can support development at [DONATION PLACE LINK].
+Guard is free and open source. If it helps your game, you can support development by donating, coming soon as well.
 
 ## License
 
-[LICENSE]
+Counde.
