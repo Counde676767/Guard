@@ -17,7 +17,7 @@ local rates = {}
 
 local Guard = {}
 
-Guard.VERSION = "0.1.0"
+Guard.VERSION = "0.1.1 hotfix"
 
 local function debugWarn(...)
 	if Configs.Settings.Debug then
@@ -320,6 +320,26 @@ function Guard.FireClient(player: Player, event_name: string, ...: any)
 		unreliableRemote:FireClient(player, event_name, ...)
 	else
 		remote:FireClient(player, event_name, ...)
+	end
+end
+
+function Guard.FireAllClients(event_name: string, ...: any)
+	if not initialised then
+		error("[Guard] Call Guard.Init() before Guard.FireAllClients()")
+	end
+	if not isServer then
+		error("[Guard] Guard.FireAllClients() is server-only.")
+	end
+
+	local cfig = Configs.Events[event_name]
+	if not cfig then
+		error(`[Guard] Event '{event_name}' is not in Configs.Events`)
+	end
+
+	if cfig.IsUnreliable then
+		unreliableRemote:FireAllClients(event_name, ...)
+	else
+		remote:FireAllClients(event_name, ...)
 	end
 end
 
